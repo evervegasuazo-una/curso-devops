@@ -1,0 +1,30 @@
+services:
+  teemii-backend:
+    image: dokkaner/teemii-backend
+    container_name: teemii-backend
+    volumes:
+      - teemii-data:/data
+    networks:
+      - teemii-network
+
+  teemii-frontend:
+    image: dokkaner/teemii-frontend
+    container_name: teemii-frontend
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_APP_TITLE=Teemii
+      - VITE_APP_PORT=80
+    depends_on:
+      - teemii-backend
+    networks:
+      - teemii-network
+
+volumes:
+  teemii-data:
+    name: teemii-data
+
+networks:
+  teemii-network:
+    name: teemii-network
+    driver: bridge
