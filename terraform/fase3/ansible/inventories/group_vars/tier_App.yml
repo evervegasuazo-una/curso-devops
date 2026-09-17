@@ -1,0 +1,9 @@
+---
+# La capa App no tiene IP pública, así que cada conexión salta por el bastion.
+# Su IP también sale del inventario dinámico (grupo tier_Bastion).
+ansible_ssh_common_args: >-
+  -o StrictHostKeyChecking=no
+  -o ProxyCommand="ssh -W %h:%p -q
+  -i {{ ssh_key_file }}
+  -o StrictHostKeyChecking=no
+  ec2-user@{{ hostvars[groups['tier_Bastion'][0]].public_ip_address }}"

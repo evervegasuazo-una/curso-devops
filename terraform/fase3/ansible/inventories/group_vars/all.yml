@@ -1,0 +1,6 @@
+---
+ansible_user: ec2-user
+
+app_port: 8080
+
+ssh_key_file: "{{ playbook_dir }}/../../../ssh-key"

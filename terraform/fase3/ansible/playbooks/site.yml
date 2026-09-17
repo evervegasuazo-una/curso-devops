@@ -1,0 +1,4 @@
+---
+# La capa App va primero porque NGINX necesita conocer sus IPs privadas.
+- ansible.builtin.import_playbook: app.yml
+- ansible.builtin.import_playbook: web.yml

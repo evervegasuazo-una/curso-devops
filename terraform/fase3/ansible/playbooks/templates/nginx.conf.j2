@@ -1,0 +1,45 @@
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log notice;
+pid /run/nginx.pid;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    access_log    /var/log/nginx/access.log;
+    sendfile      on;
+
+    # Los backends salen del inventario dinámico, no de una lista a mano.
+    upstream app_tier {
+{% for host in groups['tier_App'] %}
+        server {{ hostvars[host].private_ip_address }}:{{ app_port }};  # {{ host }}
+{% endfor %}
+    }
+
+    server {
+        listen 80 default_server;
+        root   /usr/share/nginx/html;
+
+        # Health check del target group del ALB.
+        location = /health {
+            default_type application/json;
+            return 200 '{"status":"ok","tier":"web","host":"{{ inventory_hostname }}"}';
+        }
+
+        # Página estática servida por la propia capa Web.
+        location = /web-status.html {
+        }
+
+        # Todo lo demás se balancea hacia la capa App.
+        location / {
+            proxy_pass http://app_tier;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}

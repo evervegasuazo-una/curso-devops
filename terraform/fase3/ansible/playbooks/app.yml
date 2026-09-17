@@ -1,0 +1,53 @@
+---
+# Fase 3.3 - Capa App: runtime Node.js.
+- name: Configurar la capa de aplicación
+  hosts: tier_App
+  become: true
+
+  tasks:
+    - name: Instalar Node.js
+      ansible.builtin.dnf:
+        name: nodejs
+        state: present
+        update_cache: true
+
+    - name: Crear el directorio de la aplicación
+      ansible.builtin.file:
+        path: /opt/reto-app
+        state: directory
+        mode: "0755"
+
+    - name: Copiar la aplicación Node.js
+      ansible.builtin.template:
+        src: server.js.j2
+        dest: /opt/reto-app/server.js
+        mode: "0644"
+      notify: Reiniciar la aplicación
+
+    - name: Copiar la página de la aplicación
+      ansible.builtin.template:
+        src: app.html.j2
+        dest: /opt/reto-app/index.html
+        mode: "0644"
+      notify: Reiniciar la aplicación
+
+    - name: Instalar el servicio systemd
+      ansible.builtin.template:
+        src: app.service.j2
+        dest: /etc/systemd/system/app.service
+        mode: "0644"
+      notify: Reiniciar la aplicación
+
+    - name: Asegurar que la aplicación está iniciada y habilitada
+      ansible.builtin.service:
+        name: reto-app
+        state: started
+        enabled: true
+        daemon_reload: true
+
+  handlers:
+    - name: Reiniciar la aplicación
+      ansible.builtin.service:
+        name: reto-app
+        state: restarted
+        daemon_reload: true

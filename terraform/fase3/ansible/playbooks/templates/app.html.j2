@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DevOps Multi-Tier AWS Architecture Challenge">
+  <title>DevOps | AWS Multi-Tier Architecture</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --surface: #0d1b2d;
+      --surface-2: #12243a;
+      --border: #25405e;
+      --text: #e8f0f8;
+      --muted: #91a5ba;
+      --blue: #4da3ff;
+      --cyan: #44d9e6;
+      --green: #49d17d;
+      --orange: #ffb454;
+      --purple: #a98bff;
+      --shadow: 0 18px 50px rgba(0,0,0,.28);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+                   "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(77,163,255,.12), transparent 28%),
+        radial-gradient(circle at 90% 15%, rgba(68,217,230,.08), transparent 25%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .container {
+      width: min(1180px, calc(100% - 40px));
+      margin: auto;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(7,17,31,.86);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(37,64,94,.7);
+    }
+
+    nav {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color: #03101d;
+      font-weight: 900;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 22px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .hero {
+      padding: 90px 0 65px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      align-items: center;
+      gap: 55px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 11px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--cyan);
+      background: rgba(68,217,230,.06);
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      line-height: .98;
+      letter-spacing: -.055em;
+    }
+
+    .gradient {
+      background: linear-gradient(100deg, var(--blue), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      max-width: 680px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 30px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 17px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: .9rem;
+      transition: .2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), #2f7fe0);
+      border-color: transparent;
+      color: white;
+    }
+
+    .btn-secondary { color: var(--muted); }
+    .btn:hover { transform: translateY(-2px); }
+
+    .hero-card {
+      background: linear-gradient(145deg, rgba(18,36,58,.92), rgba(13,27,45,.92));
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .terminal {
+      background: #050b13;
+      border: 1px solid #1d3045;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    .terminal-top {
+      padding: 10px 14px;
+      border-bottom: 1px solid #1d3045;
+      color: #71869c;
+      font-size: .75rem;
+    }
+
+    .terminal-body {
+      padding: 18px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .78rem;
+      color: #a9bdd0;
+    }
+
+    .green { color: var(--green); }
+    .blue { color: var(--blue); }
+    .orange { color: var(--orange); }
+
+    section { padding: 70px 0; }
+
+    .section-heading {
+      margin-bottom: 34px;
+    }
+
+    .section-heading span {
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+    }
+
+    .section-heading h2 {
+      margin-top: 7px;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      letter-spacing: -.04em;
+    }
+
+    .section-heading p {
+      margin-top: 9px;
+      color: var(--muted);
+      max-width: 760px;
+    }
+
+    .architecture {
+      display: grid;
+      gap: 14px;
+    }
+
+    .tier {
+      border: 1px solid var(--border);
+      background: rgba(13,27,45,.72);
+      border-radius: var(--radius);
+      padding: 22px;
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .tier-label {
+      display: grid;
+      place-items: center;
+      min-height: 100px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      font-weight: 900;
+      letter-spacing: .04em;
+    }
+
+    .tier-web .tier-label { color: var(--blue); background: rgba(77,163,255,.08); }
+    .tier-app .tier-label { color: var(--green); background: rgba(73,209,125,.08); }
+    .tier-state .tier-label { color: var(--orange); background: rgba(255,180,84,.08); }
+
+    .tier h3 { font-size: 1.15rem; }
+    .tier p { color: var(--muted); font-size: .9rem; margin-top: 5px; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 13px;
+    }
+
+    .chip {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 9px;
+      color: #b9c9d9;
+      background: rgba(255,255,255,.025);
+      font-size: .72rem;
+      font-weight: 700;
+    }
+
+    .flow {
+      text-align: center;
+      color: #607993;
+      font-size: 1.4rem;
+      height: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: rgba(13,27,45,.72);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 23px;
+    }
+
+    .card-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(77,163,255,.09);
+      color: var(--blue);
+      font-weight: 900;
+      margin-bottom: 15px;
+    }
+
+    .card h3 { font-size: 1.05rem; }
+    .card p { margin-top: 8px; color: var(--muted); font-size: .88rem; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+    .step {
+      position: relative;
+      padding: 19px;
+      min-height: 170px;
+      border: 1px solid var(--border);
+      background: rgba(13,27,45,.7);
+      border-radius: 15px;
+    }
+
+    .step-number {
+      font-family: monospace;
+      color: var(--cyan);
+      font-weight: 900;
+      font-size: .78rem;
+    }
+
+    .step h3 { margin-top: 15px; font-size: .98rem; }
+    .step p { margin-top: 7px; color: var(--muted); font-size: .78rem; }
+
+    .checklist {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .check {
+      padding: 15px 17px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: rgba(13,27,45,.6);
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .check-mark {
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .check strong { font-size: .88rem; }
+    .check small { display: block; color: var(--muted); margin-top: 3px; }
+
+    .code {
+      background: #050b13;
+      border: 1px solid #1d3045;
+      border-radius: 15px;
+      padding: 20px;
+      overflow-x: auto;
+      color: #b7c8d8;
+      font: .78rem/1.7 "SFMono-Regular", Consolas, monospace;
+    }
+
+    footer {
+      padding: 35px 0 50px;
+      color: #71869c;
+      font-size: .8rem;
+      border-top: 1px solid rgba(37,64,94,.65);
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding-top: 65px; }
+      .grid { grid-template-columns: 1fr 1fr; }
+      .steps { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 650px) {
+      .container { width: min(100% - 26px, 1180px); }
+      .nav-links { display: none; }
+      .hero { gap: 30px; }
+      .tier { grid-template-columns: 1fr; }
+      .grid, .steps, .checklist { grid-template-columns: 1fr; }
+      section { padding: 50px 0; }
+    }
+  </style>
+</head>
+
+<body>
+<header>
+  <nav class="container">
+    <a class="brand" href="#inicio">
+      <span class="brand-mark">&gt;_</span>
+      <span>DevOps AWS Lab</span>
+    </a>
+    <div class="nav-links">
+      <a href="#arquitectura">Arquitectura</a>
+      <a href="#infra">Infraestructura</a>
+      <a href="#ansible">Ansible</a>
+      <a href="#checklist">Checklist</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section class="container hero" id="inicio">
+    <div>
+      <span class="eyebrow">AWS · Terraform · Ansible</span>
+      <h1>Arquitectura<br><span class="gradient">Multi-Tier</span></h1>
+      <p>
+        Implementación de una plataforma web altamente disponible,
+        distribuida en múltiples Availability Zones y automatizada
+        mediante Infrastructure as Code y configuración declarativa.
+      </p>
+      <div class="buttons">
+        <a class="btn btn-primary" href="#arquitectura">Ver arquitectura</a>
+        <a class="btn btn-secondary" href="#checklist">Ver criterios</a>
+      </div>
+    </div>
+
+    <div class="hero-card">
+      <div class="terminal">
+        <div class="terminal-top">~/devops-aws · deployment</div>
+        <div class="terminal-body">
+          <div><span class="green">$</span> terraform apply</div>
+          <div>aws_vpc.main ........ <span class="green">created</span></div>
+          <div>aws_subnet.public[0]  <span class="green">created</span></div>
+          <div>aws_subnet.public[1]  <span class="green">created</span></div>
+          <div>aws_instance.web[0]   <span class="green">created</span></div>
+          <div>aws_instance.web[1]   <span class="green">created</span></div>
+          <div>aws_instance.app[0]   <span class="green">created</span></div>
+          <div>aws_instance.app[1]   <span class="green">created</span></div>
+          <br>
+          <div><span class="blue">$</span> ansible-playbook site.yml</div>
+          <div>web-tier ............. <span class="green">ok</span></div>
+          <div>app-tier ............. <span class="green">ok</span></div>
+          <br>
+          <div><span class="orange">STATUS:</span> infrastructure ready ✓</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="arquitectura">
+    <div class="container">
+      <div class="section-heading">
+        <span>01 · Diseño</span>
+        <h2>Arquitectura de la solución</h2>
+        <p>Separación clara entre exposición pública, procesamiento de aplicación y gestión del estado de Terraform.</p>
+      </div>
+
+      <div class="architecture">
+        <div class="tier tier-web">
+          <div class="tier-label">WEB TIER</div>
+          <div>
+            <h3>Internet → ALB → Web Servers</h3>
+            <p>Subredes públicas en al menos dos AZs. Nginx/Apache sirve contenido y recibe únicamente tráfico autorizado.</p>
+            <div class="chips">
+              <span class="chip">ALB</span>
+              <span class="chip">EC2 × 2</span>
+              <span class="chip">Public Subnets</span>
+              <span class="chip">Nginx</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow">↓</div>
+
+        <div class="tier tier-app">
+          <div class="tier-label">APP TIER</div>
+          <div>
+            <h3>Web Servers → Application Servers :8080</h3>
+            <p>Instancias privadas sin IP pública. El Security Group permite tráfico solamente desde la capa Web.</p>
+            <div class="chips">
+              <span class="chip">EC2 × 2</span>
+              <span class="chip">Private Subnets</span>
+              <span class="chip">Node.js / Python</span>
+              <span class="chip">Port 8080</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow">↓</div>
+
+        <div class="tier tier-state">
+          <div class="tier-label">STATE</div>
+          <div>
+            <h3>Terraform Remote State</h3>
+            <p>S3 conserva el estado remoto. El mecanismo de locking evita operaciones concurrentes sobre el mismo state.</p>
+            <div class="chips">
+              <span class="chip">S3</span>
+              <span class="chip">State Versioning</span>
+              <span class="chip">State Locking</span>
+              <span class="chip">IAM</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="infra">
+    <div class="container">
+      <div class="section-heading">
+        <span>02 · Terraform</span>
+        <h2>Infraestructura como código</h2>
+        <p>Recursos declarativos y etiquetados para permitir automatización, descubrimiento dinámico y alta disponibilidad.</p>
+      </div>
+
+      <div class="grid">
+        <article class="card">
+          <div class="card-icon">VPC</div>
+          <h3>Red multi-AZ</h3>
+          <p>VPC con subredes públicas y privadas distribuidas en dos o más Availability Zones.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-icon">SG</div>
+          <h3>Security Groups</h3>
+          <p>Reglas restrictivas: Internet → Web y Web → App:8080. La capa privada no se expone directamente.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-icon">EC2</div>
+          <h3>Compute</h3>
+          <p>Dos Web Servers y dos Application Servers utilizando count o for_each para facilitar HA.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-icon">LB</div>
+          <h3>Application Load Balancer</h3>
+          <p>Entrada pública y distribución de solicitudes hacia los Web Servers mediante target groups y health checks.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-icon">TAG</div>
+          <h3>Tags para Ansible</h3>
+          <p>Etiquetas como Tier=Web y Tier=App para que el inventario dinámico descubra automáticamente las instancias.</p>
+        </article>
+
+        <article class="card">
+          <div class="card-icon">S3</div>
+          <h3>Remote State</h3>
+          <p>State remoto, versionado y protegido contra operaciones concurrentes mediante locking.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="ansible">
+    <div class="container">
+      <div class="section-heading">
+        <span>03 · Ansible</span>
+        <h2>Configuración automatizada</h2>
+        <p>El inventario dinámico consulta AWS y separa automáticamente los servidores por su metadata.</p>
+      </div>
+
+      <div class="steps">
+        <article class="step">
+          <div class="step-number">01</div>
+          <h3>Discover</h3>
+          <p>aws_ec2 descubre instancias mediante tags.</p>
+        </article>
+        <article class="step">
+          <div class="step-number">02</div>
+          <h3>Web Tier</h3>
+          <p>Instala y configura Nginx o Apache.</p>
+        </article>
+        <article class="step">
+          <div class="step-number">03</div>
+          <h3>Static Page</h3>
+          <p>Despliega este index.html como contenido web.</p>
+        </article>
+        <article class="step">
+          <div class="step-number">04</div>
+          <h3>App Tier</h3>
+          <p>Instala Node.js/Python y ejecuta la aplicación.</p>
+        </article>
+        <article class="step">
+          <div class="step-number">05</div>
+          <h3>Idempotency</h3>
+          <p>Playbooks repetibles, handlers y servicios habilitados.</p>
+        </article>
+      </div>
+
+      <div style="height:18px"></div>
+
+      <div class="code">
+        <span class="green">#</span> Ejemplo de flujo<br>
+        <span class="blue">$</span> ansible-inventory -i aws_ec2.yml --graph<br>
+        <span class="blue">$</span> ansible-playbook -i aws_ec2.yml web.yml<br>
+        <span class="blue">$</span> ansible-playbook -i aws_ec2.yml app.yml<br>
+        <span class="green">✓</span> Web tier configured<br>
+        <span class="green">✓</span> App tier configured<br>
+        <span class="green">✓</span> Services enabled and running
+      </div>
+    </div>
+  </section>
+
+  <section id="checklist">
+    <div class="container">
+      <div class="section-heading">
+        <span>04 · Evaluación</span>
+        <h2>Definition of Done</h2>
+        <p>Checklist visual para demostrar que el desafío cumple sus objetivos.</p>
+      </div>
+
+      <div class="checklist">
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Terraform Apply</strong><small>La infraestructura se provisiona sin errores.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Remote State</strong><small>El terraform.tfstate se almacena remotamente.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>State Locking</strong><small>Se evita la escritura concurrente del estado.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Multi-AZ</strong><small>Web y App se distribuyen entre Availability Zones.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Private App Tier</strong><small>Los Application Servers no tienen IP pública.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Dynamic Inventory</strong><small>Ansible descubre EC2 mediante tags de AWS.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Health Checks</strong><small>El tráfico se dirige hacia targets saludables.</small></div>
+        </div>
+        <div class="check">
+          <span class="check-mark">✓</span>
+          <div><strong>Terraform Destroy</strong><small>Todos los recursos se pueden eliminar limpiamente.</small></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    DevOps · AWS Multi-Tier Architecture · Terraform + Ansible
+  </div>
+</footer>
+</body>
+</html>

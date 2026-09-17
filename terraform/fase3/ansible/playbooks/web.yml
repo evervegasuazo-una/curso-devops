@@ -1,0 +1,41 @@
+---
+# Fase 3.2 - Capa Web: NGINX con una página estática y proxy hacia la capa App.
+- name: Configurar la capa web
+  hosts: tier_Web
+  become: true
+
+  tasks:
+    - name: Instalar NGINX
+      ansible.builtin.dnf:
+        name: nginx
+        state: present
+        update_cache: true
+
+    - name: Asegurar que NGINX está iniciado y habilitado
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Desplegar la página estática
+      ansible.builtin.template:
+        src: web.html.j2
+        dest: /usr/share/nginx/html/web-status.html
+        mode: "0644"
+
+    - name: Configurar NGINX con el balanceo hacia la capa App
+      ansible.builtin.template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+        mode: "0644"
+      notify: Recargar NGINX
+
+    - name: Permitir que NGINX haga proxy hacia la red (SELinux)
+      ansible.builtin.command: setsebool -P httpd_can_network_connect on
+      changed_when: false
+
+  handlers:
+    - name: Recargar NGINX
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded

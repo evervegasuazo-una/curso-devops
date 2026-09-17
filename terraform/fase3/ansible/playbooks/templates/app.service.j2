@@ -1,0 +1,10 @@
+[Unit]
+Description=Capa App del reto (Node.js)
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/node /opt/reto-app/server.js
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

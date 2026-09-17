@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Capa Web | Reto DevOps</title>
+</head>
+<body>
+  <h1>Capa Web operativa</h1>
+  <p>Página estática servida por NGINX en <strong>{{ inventory_hostname }}</strong>.</p>
+  <p>Backends de la capa App:</p>
+  <ul>
+    {% for host in groups['tier_App'] %}
+    <li>{{ host }} - {{ hostvars[host].private_ip_address }}:{{ app_port }}</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

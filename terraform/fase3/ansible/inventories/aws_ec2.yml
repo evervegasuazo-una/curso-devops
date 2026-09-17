@@ -1,0 +1,24 @@
+---
+# Fase 3.1 - Inventario dinámico: Ansible consulta la API de EC2
+# y agrupa por el tag Tier que asigna Terraform.
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - us-east-1
+
+filters:
+  "tag:Project": reto
+  instance-state-name: running
+
+hostnames:
+  - tag:Name
+
+keyed_groups:
+  # Tier=Web -> tier_Web, Tier=App -> tier_App, Tier=Bastion -> tier_Bastion
+  - key: tags.Tier
+    prefix: tier
+    separator: "_"
+
+compose:
+  # Las instancias de la capa App no tienen IP pública.
+  ansible_host: public_ip_address | default(private_ip_address, true)
