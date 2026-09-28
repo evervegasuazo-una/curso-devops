@@ -1,0 +1,21 @@
+---
+# Rol docker: deja el motor listo. Nada de esto se hace a mano por SSH.
+- name: Instalar Docker y la dependencia de los módulos community.docker
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - python3-requests
+    state: present
+    update_cache: true
+
+- name: Asegurar que Docker está iniciado y habilitado
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Permitir que ec2-user use Docker sin sudo
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: docker
+    append: true

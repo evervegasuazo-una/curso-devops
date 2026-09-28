@@ -1,0 +1,6 @@
+# Copiar a terraform.tfvars antes de plan o apply.
+app_port = 8080
+app_name = "tico-market"
+bucket_name = "tico-market"
+public_key_path = "<path>"
+allowed_ssh_cidrs = ["<ip>"]

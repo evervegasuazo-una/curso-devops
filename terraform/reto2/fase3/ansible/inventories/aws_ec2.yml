@@ -1,0 +1,20 @@
+---
+plugin: amazon.aws.aws_ec2
+
+regions:
+  - us-east-1
+
+filters:
+  "tag:Project": tico-market
+  instance-state-name: running
+
+hostnames:
+  - tag:Name
+
+keyed_groups:
+  - key: tags.Env
+    prefix: env
+    separator: "_"
+
+compose:
+  ansible_host: public_ip_address

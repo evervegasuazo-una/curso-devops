@@ -1,0 +1,11 @@
+---
+ansible_user: ec2-user
+
+app_image: tico-market
+app_image_tag: latest
+
+app_host_port: 8080
+app_container_port: 8080
+
+app_build_context: "{{ playbook_dir }}/../../../fase1"
+app_remote_dir: /opt/tico-market

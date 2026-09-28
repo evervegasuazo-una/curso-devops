@@ -1,0 +1,17 @@
+---
+- name: Desplegar TicoMarket en la instancia EC2
+  hosts: "{{ target | default('env_develop') }}"
+  become: true
+  gather_facts: false
+
+  pre_tasks:
+    - name: Esperar a que la instancia acepte conexiones
+      ansible.builtin.wait_for_connection:
+        timeout: 300
+
+    - name: Recolectar los facts
+      ansible.builtin.setup:
+
+  roles:
+    - docker
+    - app

@@ -1,0 +1,48 @@
+---
+# Rol app: construye la imagen de la fase 1 en la instancia y levanta el contenedor.
+- name: Crear el directorio de la aplicación
+  ansible.builtin.file:
+    path: "{{ app_remote_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Copiar el contexto de build (Dockerfile y código de la fase 1)
+  ansible.builtin.copy:
+    src: "{{ app_build_context }}/"
+    dest: "{{ app_remote_dir }}/"
+  register: source
+
+- name: Revisar si la imagen ya está construida
+  ansible.builtin.command: "docker image inspect {{ app_image }}:{{ app_image_tag }}"
+  register: image
+  changed_when: false
+  failed_when: false
+
+# Se reconstruye sólo si falta la imagen o si cambió el código.
+- name: Construir la imagen de TicoMarket
+  ansible.builtin.command:
+    cmd: "docker build -t {{ app_image }}:{{ app_image_tag }} ."
+    chdir: "{{ app_remote_dir }}"
+  register: build
+  when: image.rc != 0 or source.changed
+
+- name: Levantar el contenedor
+  community.docker.docker_container:
+    name: "{{ app_image }}"
+    image: "{{ app_image }}:{{ app_image_tag }}"
+    state: started
+    restart_policy: unless-stopped
+    recreate: "{{ build is changed }}"
+    published_ports:
+      - "{{ app_host_port }}:{{ app_container_port }}"
+
+# Health check: el playbook no termina bien si la app no contesta de verdad.
+- name: Verificar que app responde
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ app_host_port }}/health"
+    return_content: true
+  register: health
+  until: health.status == 200 and (health.json.status | default('')) == 'ok'
+  retries: 5
+  delay: 3
+  changed_when: false
