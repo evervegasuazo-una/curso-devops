@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "teemii.backend.fullname" . }}
+  labels:
+    {{- include "teemii.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ .Values.backend.replicas }}
+  # El PVC es ReadWriteOnce: no puede haber dos pods montándolo a la vez
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "teemii.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: backend
+  template:
+    metadata:
+      labels:
+        {{- include "teemii.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: backend
+        app: teemii-backend
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/backend/configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - name: api
+              containerPort: 3000
+            - name: socketio
+              containerPort: 1555
+          envFrom:
+            - configMapRef:
+                name: {{ include "teemii.backend.fullname" . }}
+          readinessProbe:
+            tcpSocket:
+              port: api
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: api
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          volumeMounts:
+            - name: data
+              mountPath: {{ .Values.backend.persistence.mountPath }}
+          {{- with .Values.backend.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.backend.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "teemii.backend.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

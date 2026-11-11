@@ -1,0 +1,11 @@
+apiVersion: v2
+name: teemii
+description: Teemii (lector y gestor de mangas) en Kubernetes
+type: application
+version: 0.0.1
+appVersion: "latest"
+keywords:
+  - teemii
+  - manga
+home: https://github.com/dokkaner/teemii
+icon: https://raw.githubusercontent.com/dokkaner/teemii/master/app/public/assets/icons/logo.png

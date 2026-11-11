@@ -1,0 +1,12 @@
+Teemii desplegado en el namespace {{ .Release.Namespace }}.
+
+Pods:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}
+
+Acceso:
+{{- if .Values.ingress.enabled }}
+  http://{{ .Values.ingress.host }}  (añade "127.0.0.1 {{ .Values.ingress.host }}" a /etc/hosts)
+{{- else }}
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "teemii.frontend.fullname" . }} {{ .Values.frontend.service.port }}:{{ .Values.frontend.service.port }}
+  http://localhost:{{ .Values.frontend.service.port }}
+{{- end }}

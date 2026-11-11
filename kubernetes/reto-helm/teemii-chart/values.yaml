@@ -1,0 +1,47 @@
+backend:
+  image:
+    repository: dokkaner/teemii-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  # Host al que el nginx del frontend reenvía /api y /socket.io.
+  # Vacío = Service del backend de este release (<release>-teemii-backend).
+  url: ""
+  service:
+    type: ClusterIP
+    apiPort: 3000
+    socketPort: 1555
+  env: {}
+  persistence:
+    enabled: true
+    # Vacío = StorageClass por defecto del clúster ("standard" en Kind)
+    storageClass: ""
+    size: 1Gi
+    mountPath: /data
+  resources: {}
+
+frontend:
+  image:
+    repository: dokkaner/teemii-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: NodePort
+    port: 8080
+    # Solo aplica con type NodePort. Vacío = Kubernetes asigna uno.
+    nodePort: 30080
+  env:
+    VITE_APP_TITLE: Teemii
+    VITE_APP_PORT: "80"
+  # Init container que espera a que el backend acepte conexiones antes de arrancar nginx
+  waitForBackend:
+    enabled: true
+    image: busybox:1.36
+  resources: {}
+
+ingress:
+  enabled: false
+  className: nginx
+  host: teemii.local
+  annotations: {}

@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "teemii.frontend.fullname" . }}
+  labels:
+    {{- include "teemii.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: {{ .Values.frontend.replicas }}
+  selector:
+    matchLabels:
+      {{- include "teemii.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  template:
+    metadata:
+      labels:
+        {{- include "teemii.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        app: teemii-frontend
+      annotations:
+        checksum/nginx: {{ include (print $.Template.BasePath "/frontend/configmap.yaml") . | sha256sum }}
+    spec:
+      {{- if .Values.frontend.waitForBackend.enabled }}
+      initContainers:
+        - name: wait-for-backend
+          image: {{ .Values.frontend.waitForBackend.image }}
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z -w 2 {{ include "teemii.backend.url" . }} {{ .Values.backend.service.apiPort }}; do
+                echo "Esperando al backend {{ include "teemii.backend.url" . }}:{{ .Values.backend.service.apiPort }}..."
+                sleep 2
+              done
+      {{- end }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            {{- range $key, $value := .Values.frontend.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+          {{- with .Values.frontend.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: {{ include "teemii.frontend.fullname" . }}-nginx

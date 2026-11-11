@@ -1,0 +1,37 @@
+{{- $backend := include "teemii.backend.url" . -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "teemii.frontend.fullname" . }}-nginx
+  labels:
+    {{- include "teemii.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+data:
+  # Reemplaza el default.conf de la imagen, que tiene "teemii-backend" escrito a fuego
+  default.conf: |
+    server {
+        listen 80;
+
+        location / {
+            root /usr/share/nginx/html;
+            try_files $uri $uri/ /index.html;
+        }
+
+        location /api {
+            proxy_pass http://{{ $backend }}:{{ .Values.backend.service.apiPort }};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection 'upgrade';
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+
+        location /socket.io {
+            proxy_pass http://{{ $backend }}:{{ .Values.backend.service.socketPort }};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_cache_bypass $http_upgrade;
+        }
+    }

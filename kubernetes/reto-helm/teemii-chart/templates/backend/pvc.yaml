@@ -1,0 +1,21 @@
+{{- if .Values.backend.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "teemii.backend.fullname" . }}-data
+  labels:
+    {{- include "teemii.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+  annotations:
+    # Los mangas descargados sobreviven a un helm uninstall
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.backend.persistence.storageClass }}
+  storageClassName: {{ . }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.backend.persistence.size }}
+{{- end }}

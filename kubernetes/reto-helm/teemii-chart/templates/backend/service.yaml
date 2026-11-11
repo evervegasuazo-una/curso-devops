@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "teemii.backend.fullname" . }}
+  labels:
+    {{- include "teemii.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  type: {{ .Values.backend.service.type }}
+  selector:
+    {{- include "teemii.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+  ports:
+    - name: api
+      port: {{ .Values.backend.service.apiPort }}
+      targetPort: api
+    - name: socketio
+      port: {{ .Values.backend.service.socketPort }}
+      targetPort: socketio
