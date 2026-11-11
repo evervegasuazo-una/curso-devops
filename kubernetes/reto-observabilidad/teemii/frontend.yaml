@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: teemii-frontend-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teemii-frontend
+  template:
+    metadata:
+      labels:
+        app: teemii-frontend
+    spec:
+      containers:
+        - name: teemii-frontend
+          image: dokkaner/teemii-frontend
+          ports:
+            - containerPort: 80
+          env:
+            - name: VITE_APP_TITLE
+              value: Teemii
+            - name: VITE_APP_PORT
+              value: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: teemii-frontend
+spec:
+  type: NodePort
+  selector:
+    app: teemii-frontend
+  ports:
+    - port: 8080
+      targetPort: 80
+      nodePort: 30080
